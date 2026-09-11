@@ -29,7 +29,7 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [mode, setMode] = useState<"login" | "signup">("signup");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -80,7 +80,30 @@ function AuthPage() {
             <MessageCircle className="size-6" />
           </span>
           <h1 className="text-xl font-bold">Cobrança WhatsApp</h1>
-          <p className="text-sm text-muted-foreground">Painel do administrador</p>
+          <p className="text-sm text-muted-foreground">
+            {mode === "signup" ? "Crie sua conta de administrador" : "Entre no painel do administrador"}
+          </p>
+        </div>
+
+        <div className="mb-4 grid grid-cols-2 rounded-lg bg-muted p-1 text-sm">
+          <button
+            type="button"
+            onClick={() => setMode("signup")}
+            className={`rounded-md px-3 py-2 font-medium transition ${
+              mode === "signup" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+            }`}
+          >
+            Criar conta
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("login")}
+            className={`rounded-md px-3 py-2 font-medium transition ${
+              mode === "login" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+            }`}
+          >
+            Entrar
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -118,7 +141,7 @@ function AuthPage() {
           onClick={() => setMode(mode === "login" ? "signup" : "login")}
           className="mt-4 w-full text-sm text-muted-foreground underline-offset-4 hover:underline"
         >
-          {mode === "login" ? "Criar conta de administrador" : "Já tenho conta"}
+          {mode === "login" ? "Preciso criar uma conta" : "Já tenho conta, quero entrar"}
         </button>
       </div>
     </main>
