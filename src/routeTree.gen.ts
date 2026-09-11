@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedConfiguracaoRouteImport } from './routes/_authenticated/configuracao'
 import { Route as ApiPublicHooksEnviarCobrancasRouteImport } from './routes/api/public/hooks/enviar-cobrancas'
 import { Route as ApiPublicWebhookEvolutionRouteImport } from './routes/api/public/webhook/evolution'
 
@@ -23,6 +25,17 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedConfiguracaoRoute =
+  AuthenticatedConfiguracaoRouteImport.update({
+    id: '/configuracao',
+    path: '/configuracao',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicHooksEnviarCobrancasRoute =
   ApiPublicHooksEnviarCobrancasRouteImport.update({
     id: '/api/public/hooks/enviar-cobrancas',
@@ -37,21 +50,25 @@ const ApiPublicWebhookEvolutionRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AuthenticatedRouteRoute
+  '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
+  '/configuracao': typeof AuthenticatedConfiguracaoRoute
   '/api/public/hooks/enviar-cobrancas': typeof ApiPublicHooksEnviarCobrancasRoute
   '/api/public/webhook/evolution': typeof ApiPublicWebhookEvolutionRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof AuthenticatedRouteRoute
   '/auth': typeof AuthRoute
+  '/configuracao': typeof AuthenticatedConfiguracaoRoute
+  '/': typeof AuthenticatedIndexRoute
   '/api/public/hooks/enviar-cobrancas': typeof ApiPublicHooksEnviarCobrancasRoute
   '/api/public/webhook/evolution': typeof ApiPublicWebhookEvolutionRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/_authenticated': typeof AuthenticatedRouteRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/configuracao': typeof AuthenticatedConfiguracaoRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
   '/api/public/hooks/enviar-cobrancas': typeof ApiPublicHooksEnviarCobrancasRoute
   '/api/public/webhook/evolution': typeof ApiPublicWebhookEvolutionRoute
 }
@@ -60,24 +77,28 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/configuracao'
     | '/api/public/hooks/enviar-cobrancas'
     | '/api/public/webhook/evolution'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/auth'
+    | '/configuracao'
+    | '/'
     | '/api/public/hooks/enviar-cobrancas'
     | '/api/public/webhook/evolution'
   id:
     | '__root__'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/configuracao'
+    | '/_authenticated/'
     | '/api/public/hooks/enviar-cobrancas'
     | '/api/public/webhook/evolution'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  AuthenticatedRouteRoute: typeof AuthenticatedRouteRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ApiPublicHooksEnviarCobrancasRoute: typeof ApiPublicHooksEnviarCobrancasRoute
   ApiPublicWebhookEvolutionRoute: typeof ApiPublicWebhookEvolutionRoute
@@ -99,6 +120,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/': {
+      id: '/_authenticated/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/configuracao': {
+      id: '/_authenticated/configuracao'
+      path: '/configuracao'
+      fullPath: '/configuracao'
+      preLoaderRoute: typeof AuthenticatedConfiguracaoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/hooks/enviar-cobrancas': {
       id: '/api/public/hooks/enviar-cobrancas'
       path: '/api/public/hooks/enviar-cobrancas'
@@ -116,8 +151,21 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedConfiguracaoRoute: typeof AuthenticatedConfiguracaoRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedConfiguracaoRoute: AuthenticatedConfiguracaoRoute,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  AuthenticatedRouteRoute: AuthenticatedRouteRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ApiPublicHooksEnviarCobrancasRoute: ApiPublicHooksEnviarCobrancasRoute,
   ApiPublicWebhookEvolutionRoute: ApiPublicWebhookEvolutionRoute,
