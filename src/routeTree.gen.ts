@@ -9,10 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ApiPublicHooksEnviarCobrancasRouteImport } from './routes/api/public/hooks/enviar-cobrancas'
 import { Route as ApiPublicWebhookEvolutionRouteImport } from './routes/api/public/webhook/evolution'
 
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -32,17 +37,20 @@ const ApiPublicWebhookEvolutionRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof AuthenticatedRouteRoute
   '/auth': typeof AuthRoute
   '/api/public/hooks/enviar-cobrancas': typeof ApiPublicHooksEnviarCobrancasRoute
   '/api/public/webhook/evolution': typeof ApiPublicWebhookEvolutionRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof AuthenticatedRouteRoute
   '/auth': typeof AuthRoute
   '/api/public/hooks/enviar-cobrancas': typeof ApiPublicHooksEnviarCobrancasRoute
   '/api/public/webhook/evolution': typeof ApiPublicWebhookEvolutionRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/_authenticated': typeof AuthenticatedRouteRoute
   '/auth': typeof AuthRoute
   '/api/public/hooks/enviar-cobrancas': typeof ApiPublicHooksEnviarCobrancasRoute
   '/api/public/webhook/evolution': typeof ApiPublicWebhookEvolutionRoute
@@ -50,22 +58,26 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/auth'
     | '/api/public/hooks/enviar-cobrancas'
     | '/api/public/webhook/evolution'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/auth'
     | '/api/public/hooks/enviar-cobrancas'
     | '/api/public/webhook/evolution'
   id:
     | '__root__'
+    | '/_authenticated'
     | '/auth'
     | '/api/public/hooks/enviar-cobrancas'
     | '/api/public/webhook/evolution'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRoute
   AuthRoute: typeof AuthRoute
   ApiPublicHooksEnviarCobrancasRoute: typeof ApiPublicHooksEnviarCobrancasRoute
   ApiPublicWebhookEvolutionRoute: typeof ApiPublicWebhookEvolutionRoute
@@ -73,6 +85,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -98,6 +117,7 @@ declare module '@tanstack/react-router' {
 }
 
 const rootRouteChildren: RootRouteChildren = {
+  AuthenticatedRouteRoute: AuthenticatedRouteRoute,
   AuthRoute: AuthRoute,
   ApiPublicHooksEnviarCobrancasRoute: ApiPublicHooksEnviarCobrancasRoute,
   ApiPublicWebhookEvolutionRoute: ApiPublicWebhookEvolutionRoute,
