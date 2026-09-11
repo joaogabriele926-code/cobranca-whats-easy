@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedCobrancasRouteImport } from './routes/_authenticated/cobrancas'
 import { Route as AuthenticatedConfiguracaoRouteImport } from './routes/_authenticated/configuracao'
 import { Route as ApiPublicHooksEnviarCobrancasRouteImport } from './routes/api/public/hooks/enviar-cobrancas'
 import { Route as ApiPublicWebhookEvolutionRouteImport } from './routes/api/public/webhook/evolution'
@@ -28,6 +29,11 @@ const AuthRoute = AuthRouteImport.update({
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCobrancasRoute = AuthenticatedCobrancasRouteImport.update({
+  id: '/cobrancas',
+  path: '/cobrancas',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedConfiguracaoRoute =
@@ -52,12 +58,14 @@ const ApiPublicWebhookEvolutionRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
+  '/cobrancas': typeof AuthenticatedCobrancasRoute
   '/configuracao': typeof AuthenticatedConfiguracaoRoute
   '/api/public/hooks/enviar-cobrancas': typeof ApiPublicHooksEnviarCobrancasRoute
   '/api/public/webhook/evolution': typeof ApiPublicWebhookEvolutionRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
+  '/cobrancas': typeof AuthenticatedCobrancasRoute
   '/configuracao': typeof AuthenticatedConfiguracaoRoute
   '/': typeof AuthenticatedIndexRoute
   '/api/public/hooks/enviar-cobrancas': typeof ApiPublicHooksEnviarCobrancasRoute
@@ -67,6 +75,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/cobrancas': typeof AuthenticatedCobrancasRoute
   '/_authenticated/configuracao': typeof AuthenticatedConfiguracaoRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/api/public/hooks/enviar-cobrancas': typeof ApiPublicHooksEnviarCobrancasRoute
@@ -77,12 +86,14 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/cobrancas'
     | '/configuracao'
     | '/api/public/hooks/enviar-cobrancas'
     | '/api/public/webhook/evolution'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
+    | '/cobrancas'
     | '/configuracao'
     | '/'
     | '/api/public/hooks/enviar-cobrancas'
@@ -91,6 +102,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/cobrancas'
     | '/_authenticated/configuracao'
     | '/_authenticated/'
     | '/api/public/hooks/enviar-cobrancas'
@@ -127,6 +139,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/cobrancas': {
+      id: '/_authenticated/cobrancas'
+      path: '/cobrancas'
+      fullPath: '/cobrancas'
+      preLoaderRoute: typeof AuthenticatedCobrancasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/configuracao': {
       id: '/_authenticated/configuracao'
       path: '/configuracao'
@@ -152,11 +171,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCobrancasRoute: typeof AuthenticatedCobrancasRoute
   AuthenticatedConfiguracaoRoute: typeof AuthenticatedConfiguracaoRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCobrancasRoute: AuthenticatedCobrancasRoute,
   AuthenticatedConfiguracaoRoute: AuthenticatedConfiguracaoRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
