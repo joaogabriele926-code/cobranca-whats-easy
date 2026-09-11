@@ -296,3 +296,70 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Configuração do WhatsApp
+
+O sistema usa a Evolution API direto, sem n8n. A chave da Evolution fica salva no servidor e não aparece no HTML depois de gravada.
+
+1. Entre no sistema e faça login.
+2. Abra **Config**.
+3. Preencha:
+   - **URL base do Evolution**: exemplo `https://evolution-api-production-c674.up.railway.app`
+   - **Nome da instância**: exemplo `Julio`
+   - **API Key do Evolution**: valor de `AUTHENTICATION_API_KEY`
+   - **Número do dono/admin**: formato `55DDDNUMERO`
+   - **Chave Pix**, **titular** e **banco**
+4. Clique em **Salvar configuração**.
+5. Clique em **Testar conexão com Evolution**.
+6. Clique em **Enviar mensagem teste**.
+
+## Webhook no Evolution
+
+No painel da Evolution, configure o webhook da instância conectada:
+
+- **Webhook URL**: `https://SEU-DOMINIO/api/public/webhook/evolution`
+- **Evento**: `MESSAGES_UPSERT`
+- **Webhook ativo**: ligado
+
+Se você preencher **Token do webhook** na tela de configuração, envie esse token no cabeçalho:
+
+```text
+x-webhook-token: SEU_TOKEN
+```
+
+ou coloque no final da URL:
+
+```text
+https://SEU-DOMINIO/api/public/webhook/evolution?token=SEU_TOKEN
+```
+
+## Como a confirmação funciona
+
+O cliente responde:
+
+```text
+PAGUEI COB12345
+```
+
+O sistema avisa o dono/admin. O pagamento só é confirmado quando o dono responder:
+
+```text
+SIM COB12345
+```
+
+Para recusar e voltar para pendente:
+
+```text
+NAO COB12345
+```
+
+## Cobrança automática
+
+A rota de cobrança automática é:
+
+```text
+POST /api/public/hooks/enviar-cobrancas
+Authorization: Bearer CHARGE_CRON_TOKEN
+```
+
+Ela envia cobranças pendentes com vencimento hoje ou vencido, somente na janela de 08:00 até 10:00 no horário de Fortaleza. Configure a variável de ambiente `CHARGE_CRON_TOKEN` no servidor e chame essa rota por um agendador às 08:00 e às 10:00.
