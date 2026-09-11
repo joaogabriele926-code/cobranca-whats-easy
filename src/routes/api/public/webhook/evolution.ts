@@ -17,6 +17,7 @@ function extractText(message: Record<string, unknown> | undefined): string {
     m["extendedTextMessage"]?.text ??
     m["imageMessage"]?.caption ??
     m["documentMessage"]?.caption ??
+    m["documentWithCaptionMessage"]?.message?.documentMessage?.caption ??
     ""
   );
 }
@@ -60,11 +61,17 @@ export const Route = createFileRoute("/api/public/webhook/evolution")({
         }
 
         const key = payload.data?.key;
-        if (!key || key.fromMe) return new Response("ignorado", { status: 200 });
+        if (!key) return new Response("ignorado", { status: 200 });
 
         const from = normalizeNumber((key.remoteJid ?? "").split("@")[0] ?? "");
         const text = String(extractText(payload.data?.message) ?? "").trim();
         const media = hasMedia(payload.data?.message);
+        const upper = text.toUpperCase();
+        const adminCommand = /^(SIM|N[ÃA]O|NAO)\s+([A-Z0-9-]+)/i.exec(upper);
+
+        // Eventos fromMe são as mensagens enviadas pelo WhatsApp conectado.
+        // A confirmação manual do dono pode chegar assim; demais ecos são ignorados.
+        if (key.fromMe && !adminCommand) return new Response("ignorado", { status: 200 });
 
         await logMessage({
           direction: "recebida",
@@ -73,22 +80,21 @@ export const Route = createFileRoute("/api/public/webhook/evolution")({
           event: "MESSAGES_UPSERT",
         });
 
-        const isAdmin = Boolean(settings.admin_number) && from === normalizeNumber(settings.admin_number);
-        const upper = text.toUpperCase();
+        const isAdmin =
+          Boolean(settings.admin_number) && (from === normalizeNumber(settings.admin_number) || key.fromMe);
 
         // ---------- Resposta do dono/admin ----------
         if (isAdmin) {
-          const decision = /^(SIM|N[ÃA]O|NAO)\s+([A-Z0-9-]+)/i.exec(upper);
-          if (decision) {
-            const yes = decision[1]!.toUpperCase() === "SIM";
-            const code = decision[2]!.toUpperCase();
+          if (adminCommand) {
+            const yes = adminCommand[1]!.toUpperCase() === "SIM";
+            const code = adminCommand[2]!.toUpperCase();
             const { data: charge } = await supabaseAdmin
               .from("charges")
               .select("*, debtors(name, whatsapp)")
               .eq("code", code)
               .maybeSingle();
             if (!charge) {
-              await sendText(settings, from, `Cobrança ${code} não encontrada.`);
+              await sendText(settings, settings.admin_number || from, `Cobrança ${code} não encontrada.`);
               return new Response("ok", { status: 200 });
             }
             const debtor = charge.debtors as unknown as { name: string; whatsapp: string };
@@ -101,7 +107,7 @@ export const Route = createFileRoute("/api/public/webhook/evolution")({
                 .from("payments")
                 .insert({ charge_id: charge.id, amount: charge.amount });
               await sendText(settings, debtor.whatsapp, "Pagamento confirmado. Obrigado!", charge.id);
-              await sendText(settings, from, `Cobrança ${code} marcada como paga.`);
+              await sendText(settings, settings.admin_number || from, `Cobrança ${code} marcada como paga.`);
             } else {
               await supabaseAdmin.from("charges").update({ status: "pendente" }).eq("id", charge.id);
               await sendText(
@@ -110,7 +116,7 @@ export const Route = createFileRoute("/api/public/webhook/evolution")({
                 "Ainda não consegui confirmar o pagamento. Por favor confira o Pix.",
                 charge.id,
               );
-              await sendText(settings, from, `Cobrança ${code} mantida como pendente.`);
+              await sendText(settings, settings.admin_number || from, `Cobrança ${code} mantida como pendente.`);
             }
             return new Response("ok", { status: 200 });
           }
@@ -124,6 +130,7 @@ export const Route = createFileRoute("/api/public/webhook/evolution")({
           const query = supabaseAdmin
             .from("charges")
             .select("*, debtors!inner(name, whatsapp)")
+            .eq("debtors.whatsapp", from)
             .neq("status", "pago")
             .order("due_date", { ascending: true })
             .limit(1);
@@ -131,8 +138,9 @@ export const Route = createFileRoute("/api/public/webhook/evolution")({
           const { data: rows } = code
             ? await supabaseAdmin
                 .from("charges")
-                .select("*, debtors(name, whatsapp)")
+                .select("*, debtors!inner(name, whatsapp)")
                 .eq("code", code)
+                .eq("debtors.whatsapp", from)
                 .limit(1)
             : await query;
 
