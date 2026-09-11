@@ -7,7 +7,7 @@ import { getSettings, saveSettings, testEvolution, sendTestMessage } from "@/lib
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ShieldCheck } from "lucide-react";
+import { Copy, ShieldCheck, Webhook } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/configuracao")({
   head: () => ({
@@ -49,6 +49,11 @@ function ConfigPage() {
   const { data, refetch } = useQuery({ queryKey: ["settings"], queryFn: () => load({}) });
   const [form, setForm] = useState(empty);
   const [busy, setBusy] = useState<string | null>(null);
+  const webhookUrl =
+    typeof window !== "undefined" ? `${window.location.origin}/api/public/webhook/evolution` : "/api/public/webhook/evolution";
+  const webhookUrlWithToken = form.webhook_token
+    ? `${webhookUrl}?token=${encodeURIComponent(form.webhook_token)}`
+    : webhookUrl;
 
   useEffect(() => {
     if (data) {
@@ -77,6 +82,15 @@ function ConfigPage() {
       toast.error((e as Error).message);
     } finally {
       setBusy(null);
+    }
+  }
+
+  async function copyWebhook(value: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success("Link do webhook copiado.");
+    } catch {
+      toast.error("Não consegui copiar. Selecione o link e copie manualmente.");
     }
   }
 
@@ -154,16 +168,35 @@ function ConfigPage() {
         </Button>
       </div>
 
-      <div className="card-surface p-4 text-sm">
-        <p className="font-semibold">Webhook do Evolution</p>
-        <p className="mt-1 break-all text-muted-foreground">
-          Configure no Evolution o evento MESSAGES_UPSERT apontando para:
-          <br />
-          <code>{typeof window !== "undefined" ? window.location.origin : ""}/api/public/webhook/evolution</code>
-        </p>
-        <p className="mt-2 text-muted-foreground">
-          Se preencher o token acima, envie-o no cabeçalho <code>x-webhook-token</code> ou como{" "}
-          <code>?token=</code> na URL.
+      <div className="card-surface space-y-3 p-4 text-sm">
+        <div className="flex items-start gap-2">
+          <Webhook className="mt-0.5 size-4 shrink-0 text-primary" />
+          <div>
+            <p className="font-semibold">Webhook do site, sem n8n</p>
+            <p className="text-muted-foreground">
+              Cole este link no webhook da instância no Evolution e marque o evento <code>MESSAGES_UPSERT</code>.
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-lg border bg-muted/40 p-3">
+          <p className="text-xs font-medium uppercase text-muted-foreground">URL para colocar no Evolution</p>
+          <code className="mt-1 block break-all text-sm">{webhookUrlWithToken}</code>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="mt-3 gap-2"
+            onClick={() => copyWebhook(webhookUrlWithToken)}
+          >
+            <Copy className="size-4" />
+            Copiar webhook
+          </Button>
+        </div>
+
+        <p className="text-muted-foreground">
+          A API Key fica salva aqui no sistema para enviar mensagens. No Evolution, o webhook usa só essa URL para avisar
+          o site quando alguém responder no WhatsApp.
         </p>
       </div>
     </div>
